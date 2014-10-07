@@ -89,11 +89,11 @@ fault异常获知该操作，并完成拷贝内存页面，使得两个进程都
 
 相对与实验四，实验五主要增加的文件如上表红色部分所示，主要修改的文件如上表紫色部分所示。主要改动如下：
 
-● kern/debug/
+◆  kern/debug/
 
 kdebug.c：修改：解析用户进程的符号信息表示（可不用理会）
 
-● kern/mm/ （与本次实验有较大关系）
+◆  kern/mm/ （与本次实验有较大关系）
 
 memlayout.h：修改：增加了用户虚存地址空间的图形表示和宏定义 （需仔细理解）。
 
@@ -107,7 +107,7 @@ vmm.[ch]：修改：扩展了mm\_struct数据结构，增加了一系列函数
 
 * user\_mem\_check：搜索vma链表，检查是否是一个合法的用户空间范围
 
-● kern/process/ （与本次实验有较大关系）
+◆  kern/process/ （与本次实验有较大关系）
 
 proc.[ch]：修改：扩展了proc\_struct数据结构。增加或修改了一系列函数
 
@@ -129,11 +129,11 @@ proc.[ch]：修改：扩展了proc\_struct数据结构。增加或修改了一�
 
 * KERNEL\_EXECVE/\_\_KERNEL\_EXECVE/\_\_KERNEL\_EXECVE2：被user\_main调用，执行一用户进程
 
-● kern/trap/
+◆  kern/trap/
 
 trap.c：修改：在idt\_init函数中，对IDT初始化时，设置好了用于系统调用的中断门（idt[T\_SYSCALL]）信息。这主要与syscall的实现相关
 
-● user/\*
+◆  user/\*
 
 新增的用户程序和用户库
 
@@ -180,7 +180,6 @@ hello应用程序只是输出一些字符串，并通过系统调用sys\_getpid�
 gcc -Iuser/ -fno-builtin -Wall -ggdb -m32 -gstabs -nostdinc  -fno-stack-protector -Ilibs/ -Iuser/include/ -Iuser/libs/ -c user/hello.c -o obj/user/hello.o
 
 ld -m    elf_i386 -nostdlib -T tools/user.ld -o obj/__user_hello.out  obj/user/libs/initcode.o obj/user/libs/panic.o obj/user/libs/stdio.o obj/user/libs/syscall.o obj/user/libs/ulib.o obj/user/libs/umain.o  obj/libs/hash.o obj/libs/printfmt.o obj/libs/rand.o obj/libs/string.o obj/user/hello.o
-
 ……
 ld -m    elf_i386 -nostdlib -T tools/kernel.ld -o bin/kernel  obj/kern/init/entry.o obj/kern/init/init.o …… -b binary …… obj/__user_hello.out
 ……
@@ -275,11 +274,11 @@ init_main(void *arg) {
 * \_binary\_obj\_\_\_user\_hello\_out\_size中：hello执行码的大小
 
 kernel\_execve把这两个变量作为SYS\_exec系统调用的参数，让ucore来创建此用户进程。当ucore收到此系统调用后，将依次调用如下函数
-
+```
 vector128(vectors.S)--\>
 \_\_alltraps(trapentry.S)--\>trap(trap.c)--\>trap\_dispatch(trap.c)--
 --\>syscall(syscall.c)--\>sys\_exec（syscall.c）--\>do\_execve(proc.c)
-
+```
 最终通过do\_execve函数来完成用户进程的创建工作。此函数的主要工作流程如下：
 
 * 首先为加载新的执行码做好用户态内存空间清空准备。如果mm不为NULL，则设置页表为内核空间页表，且进一步判断mm的引用计数减1后是否为0，如果为0，则表明没有进程再需要此进程所占用的内存空间，为此将根据mm中的记录，释放进程所占用户空间内存和进程页表本身所占空间。最后把当前进程的mm内存管理指针为空。由于此处的initproc是内核线程，所以mm为NULL，整个处理都不会做。
@@ -354,13 +353,13 @@ current-\>parent-\>wait\_state==WT\_CHILD，
 
 那么父进程如何完成对子进程的最后回收工作呢？这要求父进程要执行wait用户函数或wait\_pid用户函数，这两个函数的区别是，wait函数等待任意子进程的结束通知，而wait\_pid函数等待进程id号为pid的子进程结束通知。这两个函数最终访问sys\_wait系统调用接口让ucore来完成对子进程的最后回收工作，即回收子进程的内核栈和进程控制块所占内存空间，具体流程如下：
 
-1.
+**1.**
 如果pid!=0，表示只找一个进程id号为pid的退出状态的子进程，否则找任意一个处于退出状态的子进程；
 
-2.
+**2.**
 如果此子进程的执行状态不为PROC\_ZOMBIE，表明此子进程还没有退出，则当前进程只好设置自己的执行状态为PROC\_SLEEPING，睡眠原因为WT\_CHILD（即等待子进程退出），调用schedule()函数选择新的进程执行，自己睡眠等待，如果被唤醒，则重复跳回步骤1处执行；
 
-3.
+**3.**
 如果此子进程的执行状态为PROC\_ZOMBIE，表明此子进程处于退出状态，需要当前进程（即子进程的父进程）完成对子进程的最终回收工作，即首先把子进程控制块从两个进程队列proc\_list和hash\_list中删除，并释放子进程的内核堆栈和进程控制块。自此，子进程才彻底地结束了它的执行过程，消除了它所占用的所有资源。
 
 ### 3.4 系统调用实现 
@@ -390,10 +389,10 @@ idt_init(void) {
 在上述代码中，可以看到在执行加载中断描述符表lidt指令前，专门设置了一个特殊的中断描述符idt[T\_SYSCALL]，它的特权级设置为DPL\_USER，中断向量处理地址在\_\_vectors[T\_SYSCALL]处。这样建立好这个中断描述符后，一旦用户进程执行
 “INT
 T\_SYSCALL”后，由于此中断允许用户态进程产生（注意它的特权级设置为DPL\_USER），所以CPU就会从用户态切换到内核态，保存相关寄存器，并跳转到\_\_vectors[T\_SYSCALL]处开始执行，形成如下执行路径：
-
+```
 vector128(vectors.S)--\>
 \_\_alltraps(trapentry.S)--\>trap(trap.c)--\>trap\_dispatch(trap.c)----\>syscall(syscall.c)-
-
+```
 在syscall中，根据系统调用号来完成不同的系统调用服务。
 
 #### 2. 建立系统调用的用户库准备 
@@ -472,12 +471,11 @@ syscall(int num, ...) {
 
 下面我们以getpid系统调用的执行过程大致看看操作系统是如何完成整个执行过程的。当用户进程调用getpid函数，最终执行到“INT
 T\_SYSCALL”指令后，CPU根据操作系统建立的系统调用中断描述符，转入内核态，并跳转到vector128处（kern/trap/vectors.S），开始了操作系统的系统调用执行过程，函数调用和返回操作的关系如下所示：
-
+```
 vector128(vectors.S)--\>
 \_\_alltraps(trapentry.S)--\>trap(trap.c)--\>trap\_dispatch(trap.c)--
-
 --\>syscall(syscall.c)--\>sys\_getpid(syscall.c)--\>……--\>\_\_trapret(trapentry.S)
-
+```
 在执行trap函数前，软件还需进一步保存执行系统调用前的执行现场，即把与用户进程继续执行所需的相关寄存器等当前内容保存到当前进程的中断帧trapframe中（注意，在创建进程是，把进程的trapframe放在给进程的内核栈分配的空间的顶部）。软件做的工作在vector128和\_\_alltraps的起始部分：
 ```
 vectors.S::vector128起始处:
