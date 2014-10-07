@@ -29,7 +29,7 @@
 #### 练习3: 阅读分析源代码，理解进程执行 fork/exec/wait/exit 的实现，以及系统调用的实现（不需要编码） 
 
 执行：make grade
-。如果所显示的应用程序检测都输出ok，则基本正确。（**使用的是****qemu-1.0.1**）
+。如果所显示的应用程序检测都输出ok，则基本正确。（使用的是qemu-1.0.1）
 
 #### 扩展练习 Challenge ：实现 Copy on Write 机制 
 
@@ -101,40 +101,33 @@ pmm.[ch]：修改：添加了用于进程退出（do\_exit）的内存资源回�
 
 vmm.[ch]：修改：扩展了mm\_struct数据结构，增加了一系列函数
 
-◆ mm\_map/dup\_mmap/exit\_mmap：设定/取消/复制/删除用户进程的合法内存空间
+* mm\_map/dup\_mmap/exit\_mmap：设定/取消/复制/删除用户进程的合法内存空间
 
-◆
-copy\_from\_user/copy\_to\_user：用户内存空间内容与内核内存空间内容的相互拷贝的实现
+* copy\_from\_user/copy\_to\_user：用户内存空间内容与内核内存空间内容的相互拷贝的实现
 
-◆ user\_mem\_check：搜索vma链表，检查是否是一个合法的用户空间范围
+* user\_mem\_check：搜索vma链表，检查是否是一个合法的用户空间范围
 
 ● kern/process/ （与本次实验有较大关系）
 
 proc.[ch]：修改：扩展了proc\_struct数据结构。增加或修改了一系列函数
 
-◆ setup\_pgdir/put\_pgdir：创建并设置/释放页目录表
+* setup\_pgdir/put\_pgdir：创建并设置/释放页目录表
 
-◆ copy\_mm：复制用户进程的内存空间和设置相关内存管理（如页表等）信息
+* copy\_mm：复制用户进程的内存空间和设置相关内存管理（如页表等）信息
 
-◆
-do\_exit：释放进程自身所占内存空间和相关内存管理（如页表等）信息所占空间，唤醒父进程，好让父进程收了自己，让调度器切换到其他进程
+* do\_exit：释放进程自身所占内存空间和相关内存管理（如页表等）信息所占空间，唤醒父进程，好让父进程收了自己，让调度器切换到其他进程
 
-◆
-load\_icode：被do\_execve调用，完成加载放在内存中的执行程序到进程空间，这涉及到对页表等的修改，分配用户栈
+* load\_icode：被do\_execve调用，完成加载放在内存中的执行程序到进程空间，这涉及到对页表等的修改，分配用户栈
 
-◆
-do\_execve：先回收自身所占用户空间，然后调用load\_icode，用新的程序覆盖内存空间，形成一个执行新程序的新进程
+* do\_execve：先回收自身所占用户空间，然后调用load\_icode，用新的程序覆盖内存空间，形成一个执行新程序的新进程
 
-◆ do\_yield：让调度器执行一次选择新进程的过程
+* do\_yield：让调度器执行一次选择新进程的过程
 
-◆
-do\_wait：父进程等待子进程，并在得到子进程的退出消息后，彻底回收子进程所占的资源（比如子进程的内核栈和进程控制块）
+* do\_wait：父进程等待子进程，并在得到子进程的退出消息后，彻底回收子进程所占的资源（比如子进程的内核栈和进程控制块）
 
-◆
-do\_kill：给一个进程设置PF\_EXITING标志（“kill”信息，即要它死掉），这样在trap函数中，将根据此标志，让进程退出
+* do\_kill：给一个进程设置PF\_EXITING标志（“kill”信息，即要它死掉），这样在trap函数中，将根据此标志，让进程退出
 
-◆
-KERNEL\_EXECVE/\_\_KERNEL\_EXECVE/\_\_KERNEL\_EXECVE2：被user\_main调用，执行一用户进程
+* KERNEL\_EXECVE/\_\_KERNEL\_EXECVE/\_\_KERNEL\_EXECVE2：被user\_main调用，执行一用户进程
 
 ● kern/trap/
 
@@ -167,11 +160,10 @@ ucore采用了一种FIFO的很简单的调度方法来管理每个进程占用CP
 
 我们首先来看一个应用程序，这里我们假定是hello应用程序，在user/hello.c中实现，代码如下：
 ```
-    #include <stdio.h>
-    #include <ulib.h>
+ #include <stdio.h>
+ #include <ulib.h>
 
-int
-main(void) {
+ int main(void) {
     cprintf("Hello world!!.\n");
     cprintf("I am process %d.\n", getpid());
     cprintf("hello pass.\n");
@@ -183,21 +175,14 @@ hello应用程序只是输出一些字符串，并通过系统调用sys\_getpid�
 首先，我们需要了解ucore操作系统如何能够找到hello应用程序。这需要分析ucore和hello是如何编译的。修改Makefile，把第六行注释掉。然后在本实验源码目录下执行make，可得到如下输出：
 ```
 ……
-
 + cc user/hello.c
 
- 
-
 gcc -Iuser/ -fno-builtin -Wall -ggdb -m32 -gstabs -nostdinc  -fno-stack-protector -Ilibs/ -Iuser/include/ -Iuser/libs/ -c user/hello.c -o obj/user/hello.o
-
- 
 
 ld -m    elf_i386 -nostdlib -T tools/user.ld -o obj/__user_hello.out  obj/user/libs/initcode.o obj/user/libs/panic.o obj/user/libs/stdio.o obj/user/libs/syscall.o obj/user/libs/ulib.o obj/user/libs/umain.o  obj/libs/hash.o obj/libs/printfmt.o obj/libs/rand.o obj/libs/string.o obj/user/hello.o
 
 ……
-
 ld -m    elf_i386 -nostdlib -T tools/kernel.ld -o bin/kernel  obj/kern/init/entry.o obj/kern/init/init.o …… -b binary …… obj/__user_hello.out
-
 ……
 ```
 从中可以看出，hello应用程序不仅仅是hello.c，还包含了支持hello应用程序的用户态库：
@@ -228,17 +213,13 @@ bootloader
 在tools/user.ld描述了用户程序的用户虚拟空间的执行入口虚拟地址：
 ```
 SECTIONS {
-
     /* Load programs at this address: "." means the current address */
-
     . = 0x800020;
 ```
 在tools/kernel.ld描述了操作系统的内核虚拟空间的起始入口虚拟地址：
 ```
 SECTIONS {
-
     /* Load the kernel at this address: "." means the current address */
-
     . = 0xC0100000;
 ```
 这样ucore把用户进程的虚拟地址空间分了两块，一块与内核线程一样，是所有用户进程都共享的内核虚拟地址空间，映射到同样的物理内存空间中，这样在物理内存中只需放置一份内核代码，使得用户进程从用户态进入核心态时，内核代码可以统一应对不同的内核程序；另外一块是用户虚拟地址空间，虽然虚拟地址范围一样，但映射到不同且没有交集的物理内存空间中。这样当ucore把用户进程的执行代码（即应用程序的执行代码）和数据（即应用程序的全局变量等）放到用户虚拟地址空间中时，确保了各个进程不会“非法”访问到其他进程的物理内存空间。
@@ -291,14 +272,12 @@ init_main(void *arg) {
 对于上述代码，我们需要从后向前按照函数/宏的实现一个一个来分析。Initproc的执行主体是init\_main函数，这个函数在缺省情况下是执行宏KERNEL\_EXECVE(hello)，而这个宏最终是调用kernel\_execve函数来调用SYS\_exec系统调用，由于ld在链接hello应用程序执行码时定义了两全局变量：
 
 * \_binary\_obj\_\_\_user\_hello\_out\_start：hello执行码的起始位置
-
 * \_binary\_obj\_\_\_user\_hello\_out\_size中：hello执行码的大小
 
 kernel\_execve把这两个变量作为SYS\_exec系统调用的参数，让ucore来创建此用户进程。当ucore收到此系统调用后，将依次调用如下函数
 
 vector128(vectors.S)--\>
 \_\_alltraps(trapentry.S)--\>trap(trap.c)--\>trap\_dispatch(trap.c)--
-
 --\>syscall(syscall.c)--\>sys\_exec（syscall.c）--\>do\_execve(proc.c)
 
 最终通过do\_execve函数来完成用户进程的创建工作。此函数的主要工作流程如下：
@@ -340,7 +319,7 @@ load\_icode函数的主要工作就是给用户进程建立一个能够让用户
 
 首先，exit函数会把一个退出码error\_code传递给ucore，ucore通过执行内核函数do\_exit来完成对当前进程的退出处理，主要工作简单地说就是回收当前进程所占的大部分内存资源，并通知父进程完成最后的回收工作，具体流程如下：
 
-1. 如果current-\>mm !=
+**1.** 如果current-\>mm !=
 NULL，表示是用户进程，则开始回收此用户进程所占用的用户态虚拟内存空间；
 
 a)
@@ -359,19 +338,19 @@ iii. 调用mm\_destroy函数释放mm中的vma所占内存，最后释放mm所占
 c)
 此时设置current-\>mm为NULL，表示与当前进程相关的用户虚拟内存空间和对应的内存管理成员变量所占的内核虚拟内存空间已经回收完毕；
 
-2.
+**2.**
 这时，设置当前进程的执行状态current-\>state=PROC\_ZOMBIE，当前进程的退出码current-\>exit\_code=error\_code。此时当前进程已经不能被调度了，需要此进程的父进程来做最后的回收工作（即回收描述此进程的内核栈和进程控制块）；
 
-3. 如果当前进程的父进程current-\>parent处于等待子进程状态：
+**3.** 如果当前进程的父进程current-\>parent处于等待子进程状态：
 
 current-\>parent-\>wait\_state==WT\_CHILD，
 
 则唤醒父进程（即执行“wakup\_proc(current-\>parent)”），让父进程帮助自己完成最后的资源回收；
 
-4.
+**4.**
 如果当前进程还有子进程，则需要把这些子进程的父进程指针设置为内核线程initproc，且各个子进程指针需要插入到initproc的子进程链表中。如果某个子进程的执行状态是PROC\_ZOMBIE，则需要唤醒initproc来完成对此子进程的最后回收工作。
 
-5. 执行schedule()函数，选择新的进程执行。
+**5.** 执行schedule()函数，选择新的进程执行。
 
 那么父进程如何完成对子进程的最后回收工作呢？这要求父进程要执行wait用户函数或wait\_pid用户函数，这两个函数的区别是，wait函数等待任意子进程的结束通知，而wait\_pid函数等待进程id号为pid的子进程结束通知。这两个函数最终访问sys\_wait系统调用接口让ucore来完成对子进程的最后回收工作，即回收子进程的内核栈和进程控制块所占内存空间，具体流程如下：
 
@@ -449,23 +428,14 @@ syscall(int num, ...) {
 从中可以看出，应用程序调用的exit/fork/wait/getpid等库函数最终都会调用syscall函数，只是调用的参数不同而已，如果看最终的汇编代码会更清楚：
 ```
 ……
-
   34:    8b 55 d4               mov    -0x2c(%ebp),%edx
-
   37:    8b 4d d8               mov    -0x28(%ebp),%ecx
-
   3a:    8b 5d dc                mov    -0x24(%ebp),%ebx
-
   3d:    8b 7d e0                mov    -0x20(%ebp),%edi
-
   40:    8b 75 e4                mov    -0x1c(%ebp),%esi
-
   43:    8b 45 08               mov    0x8(%ebp),%eax
-
   46:    cd 80                   int    $0x80
-
-      48: 89 45 f0                mov    %eax,-0x10(%ebp)
-
+48: 89 45 f0                mov    %eax,-0x10(%ebp)
 ……
 ```
 
@@ -480,7 +450,7 @@ syscall(int num, ...) {
 <tr><td>SYS_exit</td><td>process exit</td><td>do_exit</td></tr>
 <tr><td>SYS_fork</td><td>create child process, dup mm </td><td>do_fork-->wakeup_proc</td></tr>
 <tr><td>SYS_wait</td><td>wait child process</td><td>do_wait</td></tr>
-<tr><td>SYS_exec</td><td>after fork, process execute a new program</td><td>oad a program and refresh the mm</td></tr>
+<tr><td>SYS_exec</td><td>after fork, process execute a new program</td><td>load a program and refresh the mm</td></tr>
 <tr><td>SYS_yield</td><td>process flag itself need resecheduling</td><td>proc->need_sched=1, then scheduler will rescheule this process</td></tr>
 <tr><td>SYS_kill</td><td>kill process</td><td>do_kill-->proc->flags |= PF_EXITING,                                                        -->wakeup_proc-->do_wait-->do_exit</td></tr>
 <tr><td>SYS_getpid</td><td>get the process's pid</td><td> </td></tr>
@@ -511,24 +481,18 @@ vector128(vectors.S)--\>
 在执行trap函数前，软件还需进一步保存执行系统调用前的执行现场，即把与用户进程继续执行所需的相关寄存器等当前内容保存到当前进程的中断帧trapframe中（注意，在创建进程是，把进程的trapframe放在给进程的内核栈分配的空间的顶部）。软件做的工作在vector128和\_\_alltraps的起始部分：
 ```
 vectors.S::vector128起始处:
-
   pushl $0
   pushl $128
-
 ......
-
 trapentry.S::__alltraps起始处:
-
 pushl %ds
   pushl %es
   pushal
-
 ……
 ```
 自此，用于保存用户态的用户进程执行现场的trapframe的内容填写完毕，操作系统可开始完成具体的系统调用服务。在sys\_getpid函数中，简单地把当前进程的pid成员变量做为函数返回值就是一个具体的系统调用服务。完成服务后，操作系统按调用关系的路径原路返回到\_\_alltraps中。然后操作系统开始根据当前进程的中断帧内容做恢复执行现场操作。其实就是把trapframe的一部分内容保存到寄存器内容。恢复寄存器内容结束后，调整内核堆栈指针到中断帧的tf\_eip处，这是内核栈的结构如下：
 ```
 /* below here defined by x86 hardware */
-
     uintptr_t tf_eip;
     uint16_t tf_cs;
     uint16_t tf_padding3;
