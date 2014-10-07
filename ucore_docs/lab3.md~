@@ -446,7 +446,7 @@ CODE”的注释，请在提交时特别注意保持注释，并将“YOUR
 CODE”替换为自己的学号，并且将所有标有对应注释的部分填上正确的代码。所有扩展实验的加分总和不超过10分。
 
 附录：正确输出的参考：   
-``` 
+ 
 yuchen@yuchen-PAI4:\~/oscourse/2012spring/lab3/lab3-code-2012$ make qemu
 
 (THU.CST) os is loading ...
@@ -596,5 +596,5 @@ EOT: kernel seems ok.
 Welcome to the kernel debug monitor!!
 
 Type 'help' for a list of commands.   
-```
+
 
