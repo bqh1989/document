@@ -40,12 +40,11 @@ make run-matrix
 下实现下Linux的RCU同步互斥机制。可阅读相关Linux内核书籍或查询网上资料，可了解RCU的细节，然后大致实现在ucore中。下面是一些参考资料：
 
 * [http://www.ibm.com/developerworks/cn/linux/l-rcu/](http://www.ibm.com/developerworks/cn/linux/l-rcu/)
-*[http://www.diybl.com/course/6\_system/linux/Linuxjs/20081117/151814.html](http://www.diybl.com/course/6_system/linux/Linuxjs/20081117/151814.html)
+* [http://www.diybl.com/course/6\_system/linux/Linuxjs/20081117/151814.html](http://www.diybl.com/course/6_system/linux/Linuxjs/20081117/151814.html)
 
 ### 2.2 项目组成 
 
 此次实验中，主要有如下一些需要关注的文件：
-
 .  
 ├── boot  
 ├── kern   
@@ -311,11 +310,9 @@ while not( C ) do {}
 在单处理器情况下，将会导致所有其它进程都无法进入[临界区](http://zh.wikipedia.org/wiki/%E4%B8%B4%E7%95%8C%E5%8C%BA "临界区")使得该条件C为真，该管程的执行将会发生[死锁](http://zh.wikipedia.org/wiki/%E6%AD%BB%E9%94%81 "死锁")。为此，可引入条件变量（Condition
 Variables，简称CV）。一个条件变量CV可理解为一个进程的等待队列，队列中的进程正等待某个条件C变为真。每个条件变量关联着一个[断言](http://zh.wikipedia.org/wiki/%E6%96%B7%E8%A8%80_(%E7%A8%8B%E5%BC%8F) "断言 (程序)")Pc。当一个进程等待一个条件变量，该进程不算作占用了该管程，因而其它进程可以进入该管程执行，改变管程的状态，通知条件变量CV其关联的断言Pc在当前状态下为真。因此对条件变量CV有两种主要操作：
 
-l wait\_cv： 被一个进程调用，以等待断言Pc被满足后该进程可恢复执行.
+* wait\_cv： 被一个进程调用，以等待断言Pc被满足后该进程可恢复执行.
 进程挂在该条件变量上等待时，不被认为是占用了管程。
-
-l
-signal\_cv：被一个进程调用，以指出断言Pc现在为真，从而可以唤醒等待断言Pc被满足的进程继续执行。
+*signal\_cv：被一个进程调用，以指出断言Pc现在为真，从而可以唤醒等待断言Pc被满足的进程继续执行。
 
 有了互斥和信号量支持的管程就可用用了解决各种同步互斥问题。比如参考《OS
 Concept》一书中的6.7.2小节“用管程解决哲学家就餐问题”就给出了这样的事例：
@@ -350,9 +347,9 @@ typedef struct condvar{
 \*cvp, semaphore\_t \*mp)和cond\_signal (condvar\_t
 \*cvp)的实现原理可参考《OS
 Concept》一书中的6.7.3小节“用信号量实现管程”的内容：
-```
-cond_wait的原理描述
 
+** cond_wait的原理描述 **
+```
 cv.count++;
 if(monitor.next_count > 0)
    sem_signal(monitor.next);
@@ -362,9 +359,9 @@ sem_wait(cv.sem);
 cv.count -- ;
 ```
 
-```
-ond_signal的原理描述
 
+** ond_signal的原理描述 **
+```
 if( cv.count > 0) {
    monitor.next_count ++;
    sem_signal(cv.sem);
