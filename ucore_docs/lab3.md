@@ -163,9 +163,7 @@ page\_fault函数不知道哪些是“合法”的虚拟页，原因是ucore还�
 fault异常时，可获得访问的内存的方式（读或写）以及具体的虚拟内存地址，这样ucore就可以查询此地址，看是否属于vma\_struct数据结构中描述的合法地址范围中，如果在，则可根据具体情况进行请求调页/页换入换出处理（这就是练习2涉及的部分）；如果不在，则报错。mm\_struct和vma\_struct数据结构结合页表表示虚拟地址空间和物理地址空间的示意图如下所示：
 
 图 虚拟地址空间和物理地址空间的示意图  
-
 ![image](lab3.files/image001.png)
-
 在ucore中描述应用程序对虚拟内存“需求”的数据结构是vma\_struct（定义在vmm.h中），以及针对vma\_struct的函数操作。这里把一个vma\_struct结构的变量简称为vma变量。vma\_struct的定义如下：
 ```
 struct vma_struct {
@@ -188,30 +186,30 @@ list_entry_t list_link;
 ```
 vm\_start和vm\_end描述了一个连续地址的虚拟内存空间的起始位置和结束位置，这两个值都应该是PGSIZE 对齐的，而且描述的是一个合理的地址空间范围（即严格确保 vm\_start < vm\_end的关系）；list\_link是一个双向链表，按照从小到大的顺序把一系列用vma\_struct表示的虚拟内存空间链接起来，并且还要求这些链起来的vma\_struct应该是不相交的，即vma之间的地址空间无交集；vm\_flags表示了这个虚拟内存空间的属性，目前的属性包括：
 ```
-\#define VM\_READ 0x00000001 //只读
+#define VM_READ 0x00000001 //只读
 
-\#define VM\_WRITE 0x00000002 //可读写
+#define VM_WRITE 0x00000002 //可读写
 
-\#define VM\_EXEC 0x00000004 //可执行
+#define VM_EXEC 0x00000004 //可执行
 ```   
 
 vm\_mm是一个指针，指向一个比vma\_struct更高的抽象层次的数据结构mm\_struct，这里把一个mm\_struct结构的变量简称为mm变量。这个数据结构表示了包含所有虚拟内存空间的共同属性，具体定义如下  
 ```  
-struct mm\_struct {
+struct mm_struct {
 
 // linear list link which sorted by start addr of vma
 
-list\_entry\_t mmap\_list;
+list_entry_t mmap_list;
 
 // current accessed vma, used for speed purpose
 
-struct vma\_struct \*mmap\_cache;
+struct vma_struct *mmap_cache;
 
-pde\_t \*pgdir; // the PDT of these vma
+pde_t *pgdir; // the PDT of these vma
 
-int map\_count; // the count of these vma
+int map_count; // the count of these vma
 
-void \*sm\_priv; // the private data for swap manager
+void *sm_priv; // the private data for swap manager
 
 };
 ```  
@@ -333,13 +331,13 @@ PTE的最低位--present位应该为0 （即 PTE\_P
 标记为空，表示虚实地址映射关系不存在），接下来的7位暂时保留，可以用作各种扩展；而原来用来表示页帧号的高24位地址，恰好可以用来表示此页在硬盘上的起始扇区的位置（其从第几个扇区开始）。为了在页表项中区别
 0 和 swap 分区的映射，将 swap 分区的一个 page
 空出来不用，也就是说一个高24位不为0，而最低位为0的PTE表示了一个放在硬盘上的页的起始扇区号（见swap.h中对swap\_entry\_t的描述）：
-
+```
 swap\_entry\_t
---------------------------------------------
+--------------
 | offset | reserved | 0 |
---------------------------------------------
+---------------
 24 bits 7 bits 1 bit
-
+```
 考虑到硬盘的最小访问单位是一个扇区，而一个扇区的大小为512（2\^8）字节，所以需要8个连续扇区才能放置一个4KB的页。在ucore中，用了第二个IDE硬盘来保存被换出的扇区，根据实验三的输出信息
 
 “ide 1: 262144(sectors), 'QEMU HARDDISK'.”
@@ -363,7 +361,7 @@ fit）获得空闲页，就会进一步调用swap\_out函数换出某页，实�
 #### 4. 页替换算法的数据结构设计
 
 到实验二为止，我们知道目前表示内存中物理页使用情况的变量是基于数据结构Page的全局变量pages数组，pages的每一项表示了计算机系统中一个物理页的使用情况。为了表示物理页可被换出或已被换出的情况，可对Page数据结构进行扩展：
-``
+```
 struct Page {  
 ……   
 list\_entry\_t pra\_page\_link;   
