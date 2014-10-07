@@ -163,7 +163,8 @@ page\_fault函数不知道哪些是“合法”的虚拟页，原因是ucore还�
 fault异常时，可获得访问的内存的方式（读或写）以及具体的虚拟内存地址，这样ucore就可以查询此地址，看是否属于vma\_struct数据结构中描述的合法地址范围中，如果在，则可根据具体情况进行请求调页/页换入换出处理（这就是练习2涉及的部分）；如果不在，则报错。mm\_struct和vma\_struct数据结构结合页表表示虚拟地址空间和物理地址空间的示意图如下所示：
 
 图 虚拟地址空间和物理地址空间的示意图  
-![image](lab3.files/image001.png)
+![image](lab3.files/image001.png)   
+
 在ucore中描述应用程序对虚拟内存“需求”的数据结构是vma\_struct（定义在vmm.h中），以及针对vma\_struct的函数操作。这里把一个vma\_struct结构的变量简称为vma变量。vma\_struct的定义如下：
 ```
 struct vma_struct {
@@ -332,7 +333,7 @@ PTE的最低位--present位应该为0 （即 PTE\_P
 0 和 swap 分区的映射，将 swap 分区的一个 page
 空出来不用，也就是说一个高24位不为0，而最低位为0的PTE表示了一个放在硬盘上的页的起始扇区号（见swap.h中对swap\_entry\_t的描述）：
 ```
-swap\_entry\_t
+swap_entry_t
 --------------
 | offset | reserved | 0 |
 ---------------
@@ -434,7 +435,7 @@ CODE”替换为自己的学号，并且将所有标有对应注释的部分填�
 
 附录：正确输出的参考：   
 ```
-yuchen@yuchen-PAI4:\~/oscourse/2012spring/lab3/lab3-code-2012$ make qemu
+yuchen@yuchen-PAI4:~/oscourse/2012spring/lab3/lab3-code-2012$ make qemu
 
 (THU.CST) os is loading ...
 
@@ -450,7 +451,7 @@ end 0xc0123c10 (phys)
 
 Kernel executable memory footprint: 143KB
 
-memory management: default\_pmm\_manager
+memory management: default_pmm_manager
 
 e820map:
 
@@ -466,11 +467,11 @@ memory: 00003000, [07ffd000, 07ffffff], type = 2.
 
 memory: 00040000, [fffc0000, ffffffff], type = 2.
 
-check\_alloc\_page() succeeded!
+check_alloc_page() succeeded!
 
-check\_pgdir() succeeded!
+check_pgdir() succeeded!
 
-check\_boot\_pgdir() succeeded!
+check_boot_pgdir() succeeded!
 
 -------------------- BEGIN --------------------
 
@@ -486,13 +487,13 @@ PDE(001) fac00000-fb000000 00400000 -rw
 
 --------------------- END ---------------------
 
-check\_vma\_struct() succeeded!
+check_vma_struct() succeeded!
 
 page fault at 0x00000100: K/W [no page found].
 
-check\_pgfault() succeeded!
+check_pgfault() succeeded!
 
-check\_vmm() succeeded.
+check_vmm() succeeded.
 
 ide 0: 10000(sectors), 'QEMU HARDDISK'.
 
@@ -500,15 +501,15 @@ ide 1: 262144(sectors), 'QEMU HARDDISK'.
 
 SWAP: manager = fifo swap manager
 
-BEGIN check\_swap: count 1, total 31992
+BEGIN check_swap: count 1, total 31992
 
-mm-\>sm\_priv c0123c04 in fifo\_init\_mm
+mm->sm_priv c0123c04 in fifo_init_mm
 
 setup Page Table for vaddr 0X1000, so alloc a page
 
-setup Page Table vaddr 0\~4MB OVER!
+setup Page Table vaddr 0~4MB OVER!
 
-set up init env for check\_swap begin!
+set up init env for check_swap begin!
 
 page fault at 0x00001000: K/W [no page found].
 
@@ -518,57 +519,57 @@ page fault at 0x00003000: K/W [no page found].
 
 page fault at 0x00004000: K/W [no page found].
 
-set up init env for check\_swap over!
+set up init env for check_swap over!
 
-write Virt Page c in fifo\_check\_swap
+write Virt Page c in fifo_check_swap
 
-write Virt Page a in fifo\_check\_swap
+write Virt Page a in fifo_check_swap
 
-write Virt Page d in fifo\_check\_swap
+write Virt Page d in fifo_check_swap
 
-write Virt Page b in fifo\_check\_swap
+write Virt Page b in fifo_check_swap
 
-write Virt Page e in fifo\_check\_swap
+write Virt Page e in fifo_check_swap
 
 page fault at 0x00005000: K/W [no page found].
 
-swap\_out: i 0, store page in vaddr 0x1000 to disk swap entry 2
+swap_out: i 0, store page in vaddr 0x1000 to disk swap entry 2
 
-write Virt Page b in fifo\_check\_swap
+write Virt Page b in fifo_check_swap
 
-write Virt Page a in fifo\_check\_swap
+write Virt Page a in fifo_check_swap
 
 page fault at 0x00001000: K/W [no page found].
 
-swap\_out: i 0, store page in vaddr 0x2000 to disk swap entry 3
+swap_out: i 0, store page in vaddr 0x2000 to disk swap entry 3
 
-swap\_in: load disk swap entry 2 with swap\_page in vadr 0x1000
+swap_in: load disk swap entry 2 with swap_page in vadr 0x1000
 
-write Virt Page b in fifo\_check\_swap
+write Virt Page b in fifo_check_swap
 
 page fault at 0x00002000: K/W [no page found].
 
-swap\_out: i 0, store page in vaddr 0x3000 to disk swap entry 4
+swap_out: i 0, store page in vaddr 0x3000 to disk swap entry 4
 
-swap\_in: load disk swap entry 3 with swap\_page in vadr 0x2000
+swap_in: load disk swap entry 3 with swap_page in vadr 0x2000
 
-write Virt Page c in fifo\_check\_swap
+write Virt Page c in fifo_check_swap
 
 page fault at 0x00003000: K/W [no page found].
 
-swap\_out: i 0, store page in vaddr 0x4000 to disk swap entry 5
+swap_out: i 0, store page in vaddr 0x4000 to disk swap entry 5
 
-swap\_in: load disk swap entry 4 with swap\_page in vadr 0x3000
+swap_in: load disk swap entry 4 with swap_page in vadr 0x3000
 
-write Virt Page d in fifo\_check\_swap
+write Virt Page d in fifo_check_swap
 
 page fault at 0x00004000: K/W [no page found].
 
-swap\_out: i 0, store page in vaddr 0x5000 to disk swap entry 6
+swap_out: i 0, store page in vaddr 0x5000 to disk swap entry 6
 
-swap\_in: load disk swap entry 5 with swap\_page in vadr 0x4000
+swap_in: load disk swap entry 5 with swap_page in vadr 0x4000
 
-check\_swap() succeeded!
+check_swap() succeeded!
 
 ++ setup timer interrupts
 
