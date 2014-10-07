@@ -2,9 +2,9 @@
 
 ## 1. 实验目的
 
-• 了解虚拟内存的Page Fault异常处理实现
+* 了解虚拟内存的Page Fault异常处理实现
 
-• 了解页替换算法在操作系统中的实现
+* 了解页替换算法在操作系统中的实现
 
 ## 2. 实验内容
 
@@ -42,44 +42,41 @@ challenge部分不是必做部分，不过在正确最后会酌情加分。需�
 ### 2.2 项目组成
 
 表1：实验三文件列表  
-<table>
-<tr><td>
-|-- boot  
-|-- kern  
-| |-- driver  
-| | |-- …  
-| | |-- ide.c  
-| | \`-- ide.h  
-| |-- fs  
-| | |-- fs.h  
-| | |-- swapfs.c  
-| | \`-- swapfs.h  
-| |-- init  
-| | |-- …  
-| | \`-- init.c  
-| |-- mm  
-| | |-- default\_pmm.c  
-| | |-- default\_pmm.h  
-| | |-- memlayout.h  
-| | |-- mmu.h  
-| | |-- pmm.c  
-| | |-- pmm.h  
-| | |-- swap.c  
-| | |-- swap.h  
-| | |-- swap\_fifo.c  
-| | |-- swap\_fifo.h  
-| | |-- vmm.c  
-| | \`-- vmm.h  
-| |-- sync  
-| \`-- trap  
-| |-- trap.c  
-| \`-- …  
-|-- libs   
-| |-- list.h  
-| \`-- …  
-\`-- tools  
-</td></tr>
-</table>
+
+|-- boot    
+|-- kern    
+| |-- driver   
+| | |-- …    
+| | |-- ide.c    
+| | \`-- ide.h    
+| |-- fs    
+| | |-- fs.h    
+| | |-- swapfs.c    
+| | \`-- swapfs.h    
+| |-- init    
+| | |-- …    
+| | \`-- init.c    
+| |-- mm    
+| | |-- default\_pmm.c    
+| | |-- default\_pmm.h    
+| | |-- memlayout.h    
+| | |-- mmu.h    
+| | |-- pmm.c    
+| | |-- pmm.h     
+| | |-- swap.c    
+| | |-- swap.h    
+| | |-- swap\_fifo.c    
+| | |-- swap\_fifo.h    
+| | |-- vmm.c    
+| | \`-- vmm.h    
+| |-- sync    
+| \`-- trap    
+| |-- trap.c    
+| \`-- …    
+|-- libs     
+| |-- list.h    
+| \`-- …    
+\`-- tools    
 
 相对与实验二，实验三主要增加的文件如上表红色部分所示，主要修改的文件如上表紫色部分所示，其他需要用到的重要文件用黑色表示。主要改动如下：
 
@@ -115,11 +112,10 @@ swap\_manager的简化实现，主要被swap.c的相关函数调用。重点是\
 #### 编译执行
 
 编译并运行代码的命令如下：
-
-    make
-
-    make qemu
-
+```
+    make   
+    make qemu   
+```
 则可以得到如附录所示的显示内容（仅供参考，不是标准答案输出）
 
 ## 3.虚拟内存管理
@@ -164,46 +160,43 @@ fault异常时，如何判定这个引起异常的虚拟地址内存访问是越
 fault异常处理来间接完成这二者之间的衔接。
 
 page\_fault函数不知道哪些是“合法”的虚拟页，原因是ucore还缺少一定的数据结构来描述这种不在物理内存中的“合法”虚拟页。为此ucore通过建立mm\_struct和vma\_struct数据结构，描述了ucore模拟应用程序运行所需的合法内存空间。当访问内存产生page
-fault异常时，可获得访问的内存的方式（读或写）以及具体的虚拟内存地址，这样ucore就可以查询此地址，看是否属于vma\_struct数据结构中描述的合法地址范围中，如果在，则可根据具体情况进行请求调页/页换入换出处理（这就是练习2涉及的部分）；如果不在，则报错。mm\_struct和vma\_struct数据结构结合页![image](lab3.files/image001.png)表表示虚拟地址空间和物理地址空间的示意图如下所示：
+fault异常时，可获得访问的内存的方式（读或写）以及具体的虚拟内存地址，这样ucore就可以查询此地址，看是否属于vma\_struct数据结构中描述的合法地址范围中，如果在，则可根据具体情况进行请求调页/页换入换出处理（这就是练习2涉及的部分）；如果不在，则报错。mm\_struct和vma\_struct数据结构结合页表表示虚拟地址空间和物理地址空间的示意图如下所示：
 
-图 虚拟地址空间和物理地址空间的示意图
+图 虚拟地址空间和物理地址空间的示意图  
 
-在ucore中描述应用程序对虚拟内存“需求”的数据结构是vma\_struct
-（定义在vmm.h中），以及针对vma\_struct的函数操作。这里把一个vma\_struct结构的变量简称为vma变量。vma\_struct的定义如下：
+![image](lab3.files/image001.png)
 
-struct vma\_struct {
+在ucore中描述应用程序对虚拟内存“需求”的数据结构是vma\_struct（定义在vmm.h中），以及针对vma\_struct的函数操作。这里把一个vma\_struct结构的变量简称为vma变量。vma\_struct的定义如下：
+```
+struct vma_struct {
 
 // the set of vma using the same PDT
 
-struct mm\_struct \*vm\_mm;
+struct mm_struct *vm_mm;
 
-uintptr\_t vm\_start; // start addr of vma
+uintptr_t vm_start; // start addr of vma
 
-uintptr\_t vm\_end; // end addr of vma
+uintptr_t vm_end; // end addr of vma
 
-uint32\_t vm\_flags; // flags of vma
+uint32_t vm_flags; // flags of vma
 
 //linear list link which sorted by start addr of vma
 
-list\_entry\_t list\_link;
+list_entry_t list_link;
 
 };
-
-vm\_start和vm\_end描述了一个连续地址的虚拟内存空间的起始位置和结束位置，这两个值都应该是
-PGSIZE 对齐的，而且描述的是一个合理的地址空间范围（即严格确保 vm\_start <
-vm\_end
-的关系）；list\_link是一个双向链表，按照从小到大的顺序把一系列用vma\_struct表示的虚拟内存空间链接起来，并且还要求这些链起来的
-vma\_struct
-应该是不相交的，即vma之间的地址空间无交集；vm\_flags表示了这个虚拟内存空间的属性，目前的属性包括：
-
+```
+vm\_start和vm\_end描述了一个连续地址的虚拟内存空间的起始位置和结束位置，这两个值都应该是PGSIZE 对齐的，而且描述的是一个合理的地址空间范围（即严格确保 vm\_start < vm\_end的关系）；list\_link是一个双向链表，按照从小到大的顺序把一系列用vma\_struct表示的虚拟内存空间链接起来，并且还要求这些链起来的vma\_struct应该是不相交的，即vma之间的地址空间无交集；vm\_flags表示了这个虚拟内存空间的属性，目前的属性包括：
+```
 \#define VM\_READ 0x00000001 //只读
 
 \#define VM\_WRITE 0x00000002 //可读写
 
 \#define VM\_EXEC 0x00000004 //可执行
+```   
 
-vm\_mm是一个指针，指向一个比vma\_struct更高的抽象层次的数据结构mm\_struct，这里把一个mm\_struct结构的变量简称为mm变量。这个数据结构表示了包含所有虚拟内存空间的共同属性，具体定义如下
-
+vm\_mm是一个指针，指向一个比vma\_struct更高的抽象层次的数据结构mm\_struct，这里把一个mm\_struct结构的变量简称为mm变量。这个数据结构表示了包含所有虚拟内存空间的共同属性，具体定义如下  
+```  
 struct mm\_struct {
 
 // linear list link which sorted by start addr of vma
@@ -221,7 +214,7 @@ int map\_count; // the count of these vma
 void \*sm\_priv; // the private data for swap manager
 
 };
-
+```  
 mmap_list是双向链表头，链接了所有属于同一页目录表的虚拟内存空间，mmap\_cache是指向当前正在使用的虚拟内存空间，由于操作系统执行的“局部性”原理，当前正在用到的虚拟内存空间在接下来的操作中可能还会用到，这时就不需要查链表，而是直接使用此指针就可找到下一次要用到的虚拟内存空间。由于
 mmap_cache 的引入，可使得 mm_struct 数据结构的查询加速 30% 以上。pgdir
 所指向的就是 mm_struct
@@ -271,9 +264,9 @@ trap--\> trap\_dispatch--\>pgfault\_handler--\>do\_pgfault
 
 下面需要具体分析一下do\_pgfault函数。do\_pgfault的调用关系如下图所示：
 
-![image](lab3.files/image002.png)
-
 图 do\_pgfault的调用关系图
+
+![image](lab3.files/image002.png)
 
 产生页错误异常后，CPU把引起页错误异常的虚拟地址装到寄存器CR2中，并给出了出错码（tf-\>tf\_err），指示引起页错误异常的存储器访问的类型。而中断服务例程会调用页错误异常处理函数do\_pgfault进行具体处理。页错误异常处理是实现按需分页、swap
 in/out的关键之处。
@@ -303,15 +296,15 @@ Clock）页替换算法：在时钟置换算法中，淘汰一个页面时只考
 
 如果要实现页面置换机制，只考虑页替换算法的设计与实现是远远不够的，还需考虑其他问题：
 
-l 哪些页可以被换出？
+* 哪些页可以被换出？
 
-l 一个虚拟的页如何与硬盘上的扇区建立对应关系？
+* 一个虚拟的页如何与硬盘上的扇区建立对应关系？
 
-l 何时进行换入和换出操作？
+* 何时进行换入和换出操作？
 
-l 如何设计数据结构已支持页替换算法？
+* 如何设计数据结构已支持页替换算法？
 
-l 如何完成页的换入换出操作？
+* 如何完成页的换入换出操作？
 
 这些问题在下面会逐一进行分析。注意，在实验三中仅实现了简单的页面置换机制，但现在还没有涉及实验四和实验五才实现的内核线程和用户进程，所以还无法通过内核线程机制实现一个完整意义上的虚拟内存页面置换功能。
 
@@ -370,17 +363,13 @@ fit）获得空闲页，就会进一步调用swap\_out函数换出某页，实�
 #### 4. 页替换算法的数据结构设计
 
 到实验二为止，我们知道目前表示内存中物理页使用情况的变量是基于数据结构Page的全局变量pages数组，pages的每一项表示了计算机系统中一个物理页的使用情况。为了表示物理页可被换出或已被换出的情况，可对Page数据结构进行扩展：
-
-struct Page {
-
-……
-
-list\_entry\_t pra\_page\_link;
-
-uintptr\_t pra\_vaddr;
-
-};
-
+``
+struct Page {  
+……   
+list\_entry\_t pra\_page\_link;   
+uintptr\_t pra\_vaddr;   
+};  
+```
 pra\_page\_link可用来构造按页的第一次访问时间进行排序的一个链表，这个链表的开始表示第一次访问时间最近的页，链表结尾表示第一次访问时间最远的页。当然链表头可以就可设置为pra\_list\_head（定义在swap\_fifo.c中），构造的时机实在page
 fault发生后，进行do\_pgfault函数时。pra\_vaddr可以用来记录此物理页对应的虚拟页起始地址。
 
@@ -446,7 +435,7 @@ CODE”的注释，请在提交时特别注意保持注释，并将“YOUR
 CODE”替换为自己的学号，并且将所有标有对应注释的部分填上正确的代码。所有扩展实验的加分总和不超过10分。
 
 附录：正确输出的参考：   
-``` 
+```
 yuchen@yuchen-PAI4:\~/oscourse/2012spring/lab3/lab3-code-2012$ make qemu
 
 (THU.CST) os is loading ...
